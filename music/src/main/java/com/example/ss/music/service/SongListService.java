@@ -1,11 +1,13 @@
 package com.example.ss.music.service;
 
+import com.example.ss.music.DataSource;
 import com.example.ss.music.common.ApiBuilder;
 import com.example.ss.music.common.Response;
 import com.example.ss.music.common.Tool;
 import com.example.ss.music.domain.NetworkSong;
 import com.example.ss.music.domain.NetworkSongList;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.catalina.webresources.JarResourceSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,35 +53,32 @@ public class SongListService {
     }
 
     private NetworkSongList songListById(String songListId) throws IOException {
-        String url=ApiBuilder.songList(songListId);
-        JsonNode root=tool.getRoot(url);
+        JsonNode root=tool.getRoot(ApiBuilder.songList(songListId));
         JsonNode tracks=root.get("playlist").get("tracks");
-
+        String uid=root.get("playlist").get("creator").get("userId").asText();
+        String avatarUrl=root.get("playlist").get("coverImgUrl").asText();
         List<NetworkSong> songs=new ArrayList<>();
         List<String> songIds=new ArrayList<>();
-        for (JsonNode songTrack:tracks){
-            String name=songTrack.get("name").asText();
-            String author="";
-            JsonNode authors=songTrack.get("ar");
-            if (authors.size()>0){
-                int size=authors.size();
-                author+=authors.get(0).get("name").asText();
-                for (int index=1;index<size;index++)
-                    author+=("、"+authors.get(size).asText());
-            }
-            songs.add(NetworkSong.builder().name(name).author(author).build());
+        for (JsonNode songTrack:tracks)
             songIds.add(songTrack.get("id").asText());
-        }
-        List<String> urls=songService.songUrlsByIds(songIds);
-        int size=urls.size();
+
+        JsonNode songUrlObjs=tool.getRoot(ApiBuilder.songs(songIds)).get("data");
+
+        int size=tracks.size();
         for (int index=0;index<size;index++){
-            String songUrl=urls.get(index);
-            String extensionName=songUrl.substring(songUrl.lastIndexOf("."));
-            NetworkSong song=songs.get(index);
-            song.setUrl(songUrl);
-            song.setTotalName(song.getAuthor()+" - "+song.getName()+extensionName);
+            NetworkSong song=tool.getSong(tracks.get(index),songUrlObjs.get(index));
+            song.setUid(uid);
+            songs.add(song);
         }
-        return NetworkSongList.builder().name(tool.getSongListName(root)).networkSongs(songs).build();
+
+        return NetworkSongList.builder()
+                .name(tool.getSongListName(root))
+                .remoteId(songListId)
+                .uid(uid)
+                .source(DataSource.WangYiYun)
+                .avatarUrl(avatarUrl)
+                .networkSongs(songs)
+                .build();
     }
 
     private List<String> songListBriefs(String uid){

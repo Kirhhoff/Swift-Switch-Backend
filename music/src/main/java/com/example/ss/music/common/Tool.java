@@ -1,5 +1,6 @@
 package com.example.ss.music.common;
 
+import com.example.ss.music.DataSource;
 import com.example.ss.music.domain.NetworkSong;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,34 @@ public class Tool {
         for (JsonNode songData:datas)
             urls.add(songData.get("url").asText());
         return urls;
+    }
+
+    public NetworkSong getSong(JsonNode songTrack,JsonNode songUrlObj){
+        String songId=songTrack.get("id").asText();
+        String name=songTrack.get("name").asText();
+        String avatarUrl=songTrack.get("al").get("picUrl").asText();
+        String author="";
+        JsonNode authors=songTrack.get("ar");
+        if (authors.size()>0){
+            int size=authors.size();
+            author+=authors.get(0).get("name").asText();
+            for (int index=1;index<size;index++)
+                author+=("、"+authors.get(size).asText());
+        }
+        String totalName=author+" - "+name;
+
+        String songUrl=songUrlObj.get("url").asText();
+        String extensionName="."+songUrlObj.get("type").asText();
+        return NetworkSong.builder()
+                .name(name)
+                .source(DataSource.WangYiYun)
+                .totalName(totalName)
+                .author(author)
+                .avatarUrl(avatarUrl)
+                .extensionName(extensionName)
+                .remoteId(songId)
+                .songUrl(songUrl)
+                .build();
     }
 
     public String getSongListName(JsonNode root){

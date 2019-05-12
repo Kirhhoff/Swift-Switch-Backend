@@ -32,13 +32,17 @@ public class ApiBuilder {
     }
 
     public static String songs(List<String> songIds){
-        if (!songIds.isEmpty()){
-            String parameters=songIds.get(0);
-            songIds=songIds.subList(1,songIds.size());
-            for (String songId:songIds)
-                parameters+=(","+songId);
-            return prefix(song)+"?"+"id="+parameters;
-        }
+        if (!songIds.isEmpty())
+            return prefix(song)+"?"+"id="+listParameter(songIds);
         return null;
     }
+
+    private static String listParameter(List<String> strings){
+        String parameters=strings.get(0);
+        strings=strings.subList(1,strings.size());
+        for (String string:strings)
+            parameters+=(","+string);
+        return parameters;
+    }
+
 }
