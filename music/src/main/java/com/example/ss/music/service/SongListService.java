@@ -2,10 +2,9 @@ package com.example.ss.music.service;
 
 import com.example.ss.music.DataSource;
 import com.example.ss.music.common.ApiBuilder;
-import com.example.ss.music.common.Response;
 import com.example.ss.music.common.Tool;
-import com.example.ss.music.domain.NetworkSong;
-import com.example.ss.music.domain.NetworkSongList;
+import com.example.ss.music.domain.SongDTO;
+import com.example.ss.music.domain.SongListDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.catalina.webresources.JarResourceSet;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,41 +22,29 @@ public class SongListService {
     @Autowired SongService songService;
     @Autowired LoginService loginService;
 
-    public Response songListByPhone(@NotNull String phoneNumber,@NotNull String password){
-        Response response=loginService.loginByPhone(phoneNumber,password);
-        if(response.getStatus()== Response.Status.Success){
-            String uid=(String)response.getBody();
-            return songListsByUid(uid);
-        }
-        return Response.error(response.getBody(),null);
+    public List<SongListDTO> songListByPhone(@NotNull String phoneNumber, @NotNull String password) throws IOException {
+        String uid=loginService.loginByPhone(phoneNumber,password);
+        return songListsByUid(uid);
     }
 
-    public Response songListByEmail(@NotNull String email,@NotNull String password){
-        Response response=loginService.loginByEmail(email,password);
-        if(response.getStatus()== Response.Status.Success){
-            String uid=(String)response.getBody();
-            return songListsByUid(uid);
-        }
-        return Response.error(response.getBody(),null);
+    public List<SongListDTO> songListByEmail(@NotNull String email, @NotNull String password) throws IOException {
+        String uid=loginService.loginByEmail(email,password);
+        return songListsByUid(uid);
     }
-    public Response songListsByUid(@NotNull String uid){
+    public List<SongListDTO> songListsByUid(@NotNull String uid) throws IOException {
         List<String> songListIds=songListBriefs(uid);
-        List<NetworkSongList> songLists=new ArrayList<>();
-        try {
-            for (String songListId:songListIds)
-                songLists.add(songListById(songListId));
-            return Response.success(songLists,null);
-        }catch (IOException e){
-            return Response.error(null,"IO错误");
-        }
+        List<SongListDTO> songLists=new ArrayList<>();
+        for (String songListId:songListIds)
+            songLists.add(songListById(songListId));
+        return songLists;
     }
 
-    private NetworkSongList songListById(String songListId) throws IOException {
+    private SongListDTO songListById(String songListId) throws IOException {
         JsonNode root=tool.getRoot(ApiBuilder.songList(songListId));
         JsonNode tracks=root.get("playlist").get("tracks");
         String uid=root.get("playlist").get("creator").get("userId").asText();
         String avatarUrl=root.get("playlist").get("coverImgUrl").asText();
-        List<NetworkSong> songs=new ArrayList<>();
+        List<SongDTO> songs=new ArrayList<>();
         List<String> songIds=new ArrayList<>();
         for (JsonNode songTrack:tracks)
             songIds.add(songTrack.get("id").asText());
@@ -66,18 +53,18 @@ public class SongListService {
 
         int size=tracks.size();
         for (int index=0;index<size;index++){
-            NetworkSong song=tool.getSong(tracks.get(index),songUrlObjs.get(index));
+            SongDTO song=tool.getSong(tracks.get(index),songUrlObjs.get(index));
             song.setUid(uid);
             songs.add(song);
         }
 
-        return NetworkSongList.builder()
+        return SongListDTO.builder()
                 .name(tool.getSongListName(root))
                 .remoteId(songListId)
                 .uid(uid)
                 .source(DataSource.WangYiYun)
                 .avatarUrl(avatarUrl)
-                .networkSongs(songs)
+                .songDTOs(songs)
                 .build();
     }
 

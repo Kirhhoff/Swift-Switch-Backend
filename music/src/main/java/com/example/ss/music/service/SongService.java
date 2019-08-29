@@ -2,7 +2,7 @@ package com.example.ss.music.service;
 
 import com.example.ss.music.common.ApiBuilder;
 import com.example.ss.music.common.Tool;
-import com.example.ss.music.domain.NetworkSong;
+import com.example.ss.music.domain.SongDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,13 @@ public class SongService {
         return tool.getSongUrls(tool.getRoot(ApiBuilder.songs(songIds)));
     }
 
-    public List<NetworkSong> songsByIds(List<String> songIds) throws IOException {
+    public List<SongDTO> songsByIds(List<String> songIds) throws IOException {
         JsonNode songTrackRoot=tool.getRoot(ApiBuilder.songs(songIds));
         JsonNode songUrlRoot=tool.getRoot(ApiBuilder.songs(songIds));
         int size=songTrackRoot.size();
-        List<NetworkSong> networkSongs=new ArrayList<>();
+        List<SongDTO> songDTOS =new ArrayList<>();
         for (int i=0;i<size;i++)
-            networkSongs.add(tool.getSong(songTrackRoot,songUrlRoot));
-        return networkSongs;
+            songDTOS.add(tool.getSong(songTrackRoot,songUrlRoot));
+        return songDTOS;
     }
 }

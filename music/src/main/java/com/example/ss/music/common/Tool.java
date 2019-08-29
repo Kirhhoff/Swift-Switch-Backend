@@ -1,7 +1,7 @@
 package com.example.ss.music.common;
 
 import com.example.ss.music.DataSource;
-import com.example.ss.music.domain.NetworkSong;
+import com.example.ss.music.domain.SongDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,7 @@ public class Tool {
         return urls;
     }
 
-    public NetworkSong getSong(JsonNode songTrack,JsonNode songUrlObj){
+    public SongDTO getSong(JsonNode songTrack, JsonNode songUrlObj){
         String songId=songTrack.get("id").asText();
         String name=songTrack.get("name").asText();
         String avatarUrl=songTrack.get("al").get("picUrl").asText();
@@ -61,7 +61,7 @@ public class Tool {
 
         String songUrl=songUrlObj.get("url").asText();
         String extensionName="."+songUrlObj.get("type").asText();
-        return NetworkSong.builder()
+        return SongDTO.builder()
                 .name(name)
                 .source(DataSource.WangYiYun)
                 .totalName(totalName)

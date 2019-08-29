@@ -1,7 +1,6 @@
 package com.example.ss.music.service;
 
 import com.example.ss.music.common.ApiBuilder;
-import com.example.ss.music.common.Response;
 import com.example.ss.music.common.Tool;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,23 +13,19 @@ public class LoginService {
 
     @Autowired Tool tool;
 
-    public Response loginByPhone(String phoneNumber,String password){
+    public String loginByPhone(String phoneNumber,String password) throws IOException {
         return login(ApiBuilder.loginPhone(phoneNumber,password));
     }
 
-    public Response loginByEmail(String email,String password){
+    public String loginByEmail(String email,String password) throws IOException {
         return login(ApiBuilder.loginEmail(email,password));
     }
 
-    private Response login(String url){
-        try {
-            JsonNode root=tool.getRoot(url);
-            if(root==null)
-                return Response.error(null,"登陆失败");
-            return Response.success(tool.getUid(root),null);
-
-        } catch (IOException e) {
-            return Response.error(null,"Jackson异常");
+    private String login(String url) throws IOException {
+        JsonNode root=tool.getRoot(url);
+        if(root==null){
+            //TODO 请求失败
         }
+        return tool.getUid(root);
     }
 }
